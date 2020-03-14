@@ -2,89 +2,82 @@
 import sys
 import time
 
-#from PyQt4.QtCore import QRect, Qt, pyqtSignal
-from PyQt5.QtCore import QRect, Qt, pyqtSignal
-#from PyQt4.QtGui import (
-from PyQt5.QtGui import (QClipboard,  QPainter, QFont, QBrush, QColor, 
-       QPen, QPixmap, QImage, QContextMenuEvent)
-from PyQt5.QtWidgets import (
-       QApplication, QWidget)
+# from PyQt4.QtCore import QRect, Qt, pyqtSignal
+from PySide2.QtCore import QRect, Qt, Signal as pyqtSignal
+# from PyQt4.QtGui import (
+from PySide2.QtGui import (QClipboard, QPainter, QFont, QBrush, QColor,
+                        QPen, QPixmap, QImage, QContextMenuEvent)
+from PySide2.QtWidgets import (
+    QApplication, QWidget)
 
 from .backend import Session
-
-
 
 DEBUG = False
 
 
-
 class TerminalWidget(QWidget):
-
-    
     foreground_color_map = {
-      0: "#000",
-      1: "#b00",
-      2: "#0b0",
-      3: "#bb0",
-      4: "#00b",
-      5: "#b0b",
-      6: "#0bb",
-      7: "#bbb",
-      8: "#666",
-      9: "#f00",
-      10: "#0f0",
-      11: "#ff0",
-      12: "#00f", # concelaed
-      13: "#f0f", 
-      14: "#000", # negative
-      15: "#fff", # default
+        0: "#000",
+        1: "#b00",
+        2: "#0b0",
+        3: "#bb0",
+        4: "#00b",
+        5: "#b0b",
+        6: "#0bb",
+        7: "#bbb",
+        8: "#666",
+        9: "#f00",
+        10: "#0f0",
+        11: "#ff0",
+        12: "#00f",  # concealed
+        13: "#f0f",
+        14: "#000",  # negative
+        15: "#fff",  # default
     }
     background_color_map = {
-      0: "#000",
-      1: "#b00",
-      2: "#0b0",
-      3: "#bb0",
-      4: "#00b",
-      5: "#b0b",
-      6: "#0bb",
-      7: "#bbb",
-      12: "#aaa", # cursor
-      14: "#000", # default
-      15: "#fff", # negative
+        0: "#000",
+        1: "#b00",
+        2: "#0b0",
+        3: "#bb0",
+        4: "#00b",
+        5: "#b0b",
+        6: "#0bb",
+        7: "#bbb",
+        12: "#aaa",  # cursor
+        14: "#000",  # default
+        15: "#fff",  # negative
     }
     keymap = {
-       Qt.Key_Backspace: chr(127),
-       Qt.Key_Escape: chr(27),
-       Qt.Key_AsciiTilde: "~~",
-       Qt.Key_Up: "~A",
-       Qt.Key_Down: "~B",
-       Qt.Key_Left: "~D", 
-       Qt.Key_Right: "~C", 
-       Qt.Key_PageUp: "~1", 
-       Qt.Key_PageDown: "~2", 
-       Qt.Key_Home: "~H", 
-       Qt.Key_End: "~F", 
-       Qt.Key_Insert: "~3",
-       Qt.Key_Delete: "~4", 
-       Qt.Key_F1: "~a",
-       Qt.Key_F2: "~b", 
-       Qt.Key_F3:  "~c", 
-       Qt.Key_F4:  "~d", 
-       Qt.Key_F5:  "~e", 
-       Qt.Key_F6:  "~f", 
-       Qt.Key_F7:  "~g", 
-       Qt.Key_F8:  "~h", 
-       Qt.Key_F9:  "~i", 
-       Qt.Key_F10:  "~j", 
-       Qt.Key_F11:  "~k", 
-       Qt.Key_F12:  "~l", 
+        Qt.Key_Backspace: chr(127),
+        Qt.Key_Escape: chr(27),
+        Qt.Key_AsciiTilde: "~~",
+        Qt.Key_Up: "~A",
+        Qt.Key_Down: "~B",
+        Qt.Key_Left: "~D",
+        Qt.Key_Right: "~C",
+        Qt.Key_PageUp: "~1",
+        Qt.Key_PageDown: "~2",
+        Qt.Key_Home: "~H",
+        Qt.Key_End: "~F",
+        Qt.Key_Insert: "~3",
+        Qt.Key_Delete: "~4",
+        Qt.Key_F1: "~a",
+        Qt.Key_F2: "~b",
+        Qt.Key_F3: "~c",
+        Qt.Key_F4: "~d",
+        Qt.Key_F5: "~e",
+        Qt.Key_F6: "~f",
+        Qt.Key_F7: "~g",
+        Qt.Key_F8: "~h",
+        Qt.Key_F9: "~i",
+        Qt.Key_F10: "~j",
+        Qt.Key_F11: "~k",
+        Qt.Key_F12: "~l",
     }
-
 
     session_closed = pyqtSignal()
 
-
-    def __init__(self, parent=None, command="/bin/bash", 
+    def __init__(self, parent=None, command="/bin/bash",
                  font_name="Monospace", font_size=18):
         super(TerminalWidget, self).__init__(parent)
         self.parent().setTabOrder(self, self)
@@ -111,7 +104,6 @@ class TerminalWidget(QWidget):
         if command:
             self.execute()
 
-        
     def execute(self, command="/bin/bash"):
         self._session = Session()
         self._session.start(command)
@@ -121,30 +113,24 @@ class TerminalWidget(QWidget):
             self.focusInEvent(None)
         else:
             self.focusOutEvent(None)
-            
-            
+
     def send(self, s):
         self._session.write(s)
 
-        
     def stop(self):
         self._session.stop()
 
-        
     def pid(self):
         return self._session.pid()
-
 
     def setFont(self, font):
         super(TerminalWidget, self).setFont(font)
         self._update_metrics()
 
-        
     def focusNextPrevChild(self, next):
         if not self._session.is_alive():
             return True
         return False
-
 
     def focusInEvent(self, event):
         if not self._session.is_alive():
@@ -153,7 +139,6 @@ class TerminalWidget(QWidget):
             self.killTimer(self._timer_id)
         self._timer_id = self.startTimer(250)
         self.update_screen()
-
 
     def focusOutEvent(self, event):
         if not self._session.is_alive():
@@ -165,19 +150,16 @@ class TerminalWidget(QWidget):
             self.killTimer(self._timer_id)
         self._timer_id = self.startTimer(750)
 
-
     def resizeEvent(self, event):
         if not self._session.is_alive():
             return
         self._columns, self._rows = self._pixel2pos(self.width(), self.height())
         self._session.resize(self._columns, self._rows)
 
-
     def closeEvent(self, event):
         if not self._session.is_alive():
             return
         self._session.close()
-
 
     def timerEvent(self, event):
         if not self._session.is_alive():
@@ -202,30 +184,25 @@ class TerminalWidget(QWidget):
             self._blink = not self._blink
         self.update()
 
-
     def _update_metrics(self):
         fm = self.fontMetrics()
         self._char_height = fm.height()
         self._char_width = fm.width("W")
 
-
     def _update_cursor_rect(self):
         cx, cy = self._pos2pixel(self._cursor_col, self._cursor_row)
         self._cursor_rect = QRect(cx, cy, self._char_width, self._char_height)
 
-        
     def _reset(self):
         self._update_metrics()
         self._update_cursor_rect()
         self.resizeEvent(None)
         self.update_screen()
 
-
     def update_screen(self):
         self._dirty = True
         self.update()
 
-        
     def paintEvent(self, event):
         painter = QPainter(self)
         if self._dirty:
@@ -238,18 +215,15 @@ class TerminalWidget(QWidget):
             self._paint_selection(painter)
             self._dirty = True
 
-
     def _pixel2pos(self, x, y):
         col = int(round(x / self._char_width))
         row = int(round(y / self._char_height))
         return col, row
 
-
     def _pos2pixel(self, col, row):
         x = col * self._char_width
         y = row * self._char_height
         return x, y
-
 
     def _paint_cursor(self, painter):
         if self._blink:
@@ -258,7 +232,6 @@ class TerminalWidget(QWidget):
             color = "#fff"
         painter.setPen(QPen(QColor(color)))
         painter.drawRect(self._cursor_rect)
-
 
     def _paint_screen(self, painter):
         # Speed hacks: local name lookups are faster
@@ -300,26 +273,24 @@ class TerminalWidget(QWidget):
                     pen = QPen(QColor(foreground_color))
                     brush = QBrush(QColor(background_color))
                     painter_setPen(pen)
-                    #painter.setBrush(brush)
+                    # painter.setBrush(brush)
             y += char_height
             text_append(text_line)
         self._text = text
 
-            
     def _paint_selection(self, painter):
         pcol = QColor(200, 200, 200, 50)
         pen = QPen(pcol)
         bcol = QColor(230, 230, 230, 50)
         brush = QBrush(bcol)
         painter.setPen(pen)
-        painter.setBrush(brush)        
+        painter.setBrush(brush)
         for (start_col, start_row, end_col, end_row) in self._selection:
             x, y = self._pos2pixel(start_col, start_row)
             width, height = self._pos2pixel(end_col - start_col, end_row - start_row)
             rect = QRect(x, y, width, height)
-            #painter.drawRect(rect)
+            # painter.drawRect(rect)
             painter.fillRect(rect, brush)
-
 
     def zoom_in(self):
         font = self.font()
@@ -327,13 +298,11 @@ class TerminalWidget(QWidget):
         self.setFont(font)
         self._reset()
 
-        
     def zoom_out(self):
         font = self.font()
         font.setPixelSize(font.pixelSize() - 2)
         self.setFont(font)
         self._reset()
-        
 
     return_pressed = pyqtSignal()
 
@@ -345,7 +314,7 @@ class TerminalWidget(QWidget):
         if ctrl and key == Qt.Key_Plus:
             self.zoom_in()
         elif ctrl and key == Qt.Key_Minus:
-                self.zoom_out()
+            self.zoom_out()
         else:
             if text and key != Qt.Key_Backspace:
                 self.send(text.encode("utf-8"))
@@ -354,7 +323,7 @@ class TerminalWidget(QWidget):
                 if s:
                     self.send(s.encode("utf-8"))
                 elif DEBUG:
-                    print("Unkonwn key combination")
+                    print("Unknown key combination")
                     print("Modifiers:", modifiers)
                     print("Key:", key)
                     for name in dir(Qt):
@@ -367,7 +336,6 @@ class TerminalWidget(QWidget):
         event.accept()
         if key in (Qt.Key_Enter, Qt.Key_Return):
             self.return_pressed.emit()
-
 
     def mousePressEvent(self, event):
         button = event.button()
@@ -384,12 +352,10 @@ class TerminalWidget(QWidget):
             self._selection = None
             text = str(self._clipboard.text(QClipboard.Selection))
             self.send(text.encode("utf-8"))
-            #self.update_screen()
-
+            # self.update_screen()
 
     def mouseReleaseEvent(self, QMouseEvent):
-        pass #self.update_screen()
-
+        pass  # self.update_screen()
 
     def _selection_rects(self, start_pos, end_pos):
         sx, sy = start_pos.x(), start_pos.y()
@@ -411,15 +377,14 @@ class TerminalWidget(QWidget):
         if start_col > end_col:
             start_col, end_col = end_col, start_col
         if end_row - start_row == 1:
-            return [ (start_col, start_row, end_col, end_row) ]
+            return [(start_col, start_row, end_col, end_row)]
         else:
             return [
-             (start_col, start_row, self._columns, start_row + 1),
-             (0, start_row + 1, self._columns, end_row - 1),
-             (0, end_row - 1, end_col, end_row)
-             ]
+                (start_col, start_row, self._columns, start_row + 1),
+                (0, start_row + 1, self._columns, end_row - 1),
+                (0, end_row - 1, end_col, end_row)
+            ]
 
-             
     def text(self, rect=None):
         if rect is None:
             return "\n".join(self._text)
@@ -430,7 +395,6 @@ class TerminalWidget(QWidget):
                 text.append(self._text[row][start_col:end_col])
             return text
 
-        
     def text_selection(self):
         text = []
         for (start_col, start_row, end_col, end_row) in self._selection:
@@ -438,29 +402,24 @@ class TerminalWidget(QWidget):
                 text.append(self._text[row][start_col:end_col])
         return "\n".join(text)
 
-    
     def column_count(self):
         return self._columns
-    
-    
+
     def row_count(self):
         return self._rows
-    
 
     def mouseMoveEvent(self, event):
         if self._press_pos:
             move_pos = event.pos()
             self._selection = self._selection_rects(self._press_pos, move_pos)
-    
+
             sel = self.text_selection()
             if DEBUG:
                 print("%r copied to xselection" % sel)
             self._clipboard.setText(sel, QClipboard.Selection)
-            
+
             self.update_screen()
 
-
-        
     def mouseDoubleClickEvent(self, event):
         self._press_pos = None
         # double clicks create a selection for the word under the cursor
@@ -469,7 +428,7 @@ class TerminalWidget(QWidget):
         col, row = self._pixel2pos(x, y)
         line = self._text[row]
         # find start of word
-        start_col = col 
+        start_col = col
         found_left = 0
         while start_col > 0:
             char = line[start_col]
@@ -486,8 +445,8 @@ class TerminalWidget(QWidget):
                 found_right = 1
                 break
             end_col += 1
-        self._selection = [ (start_col + found_left, row, end_col - found_right + 1, row + 1) ]
-        
+        self._selection = [(start_col + found_left, row, end_col - found_right + 1, row + 1)]
+
         sel = self.text_selection()
         if DEBUG:
             print("%r copied to xselection" % sel)
@@ -495,6 +454,5 @@ class TerminalWidget(QWidget):
 
         self.update_screen()
 
-        
     def is_alive(self):
         return (self._session and self._session.is_alive()) or False
